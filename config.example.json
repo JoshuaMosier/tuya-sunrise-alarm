@@ -1,0 +1,30 @@
+{
+    "mode": "static",
+    "static_start_time": "07:30",
+    "ramp_duration_minutes": 30,
+    "location": {
+        "latitude": 38.9072,
+        "longitude": -77.0369,
+        "timezone": "America/New_York"
+    },
+    "sunrise_offset_minutes": -30,
+    "devices": [
+        {
+            "name": "bedroom",
+            "id": "your_device_id_here",
+            "ip": "192.168.1.xxx",
+            "key": "your_local_key_here",
+            "version": "3.3",
+            "enabled": true
+        }
+    ],
+    "sunrise_curve": [
+        {"percent": 0,   "brightness": 10,  "color_temp": 0,    "description": "pre-dawn deep red"},
+        {"percent": 15,  "brightness": 50,  "color_temp": 50,   "description": "first light orange"},
+        {"percent": 30,  "brightness": 150, "color_temp": 150,  "description": "dawn orange-yellow"},
+        {"percent": 50,  "brightness": 400, "color_temp": 300,  "description": "sun cresting yellow"},
+        {"percent": 70,  "brightness": 700, "color_temp": 450,  "description": "early morning warm white"},
+        {"percent": 85,  "brightness": 900, "color_temp": 550,  "description": "morning light"},
+        {"percent": 100, "brightness": 1000, "color_temp": 650, "description": "full daylight"}
+    ]
+}
