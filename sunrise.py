@@ -97,26 +97,33 @@ def interpolate_curve(curve: list, percent: float) -> tuple:
     return int(brightness), int(color_temp)
 
 
+def set_bulb_white(bulb: tinytuya.BulbDevice, brightness: int, color_temp: int):
+    """Set bulb to white mode with brightness and color temp in a single command.
+
+    Uses raw DPS values (10-1000 scale) to avoid flash when turning on.
+    Sends all values together so bulb doesn't briefly restore previous state.
+    """
+    # Clamp values to valid range (10-1000 for brightness, 0-1000 for color temp)
+    brightness = max(10, min(1000, int(brightness)))
+    color_temp = max(0, min(1000, int(color_temp)))
+
+    payload = bulb.generate_payload(tinytuya.CONTROL, {
+        '20': True,      # Turn on
+        '21': 'white',   # White mode
+        '22': brightness,  # Brightness (10-1000)
+        '23': color_temp   # Color temp (0-1000)
+    })
+    return bulb._send_receive(payload)
+
+
 def run_sunrise_ramp(device: dict, duration_seconds: int, config: dict):
     """Run the sunrise brightness/color ramp on a single bulb."""
     bulb = connect_bulb(device)
     curve = config["sunrise_curve"]
 
-    # Get current status and turn on if needed
-    try:
-        status = bulb.status()
-        if "dps" in status and status["dps"].get("20") == False:
-            bulb.turn_on()
-            time.sleep(0.5)
-    except Exception as e:
-        print(f"  Warning: Could not get status for {device['name']}: {e}")
-        bulb.turn_on()
-        time.sleep(0.5)
-
-    # Set initial state from curve
+    # Set initial state from curve (single command turns on + sets brightness)
     brightness, color_temp = interpolate_curve(curve, 0)
-    bulb.set_brightness(brightness)
-    bulb.set_colourtemp(color_temp)
+    set_bulb_white(bulb, brightness, color_temp)
 
     print(f"  Starting sunrise ramp for {device['name']} ({duration_seconds}s)")
 
@@ -127,8 +134,7 @@ def run_sunrise_ramp(device: dict, duration_seconds: int, config: dict):
         brightness, color_temp = interpolate_curve(curve, percent)
 
         try:
-            bulb.set_brightness(brightness)
-            bulb.set_colourtemp(color_temp)
+            set_bulb_white(bulb, brightness, color_temp)
         except Exception as e:
             print(f"  Warning: Failed to update bulb: {e}")
 
@@ -140,8 +146,7 @@ def run_sunrise_ramp(device: dict, duration_seconds: int, config: dict):
 
     # Set final values from curve
     brightness, color_temp = interpolate_curve(curve, 100)
-    bulb.set_brightness(brightness)
-    bulb.set_colourtemp(color_temp)
+    set_bulb_white(bulb, brightness, color_temp)
     print(f"  Completed sunrise ramp for {device['name']}")
 
 
